@@ -50,8 +50,8 @@ extern "C" {
         m: c_int,
         w: c_int,
         schedule: *mut *mut c_int,
-        data_ptrs: *const u8,
-        coding_ptrs: *const *const c_char,
+        data_ptrs: *const *const u8,
+        coding_ptrs: *const *mut u8,
         size: usize,
         packetsize: c_int,
     );
