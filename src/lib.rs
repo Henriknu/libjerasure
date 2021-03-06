@@ -1,8 +1,10 @@
+#![warn(rust_2018_idioms)]
+
+use std::alloc::Layout;
 use std::alloc::{self};
+use std::num::NonZeroUsize;
 use std::ptr;
 use std::slice;
-use std::{alloc::Layout, mem};
-use std::{mem::size_of, num::NonZeroUsize};
 
 use error::{ErasureCoderError, ErasureCoderResult};
 
