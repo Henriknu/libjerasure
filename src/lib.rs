@@ -293,7 +293,7 @@ impl ErasureCoder {
             result.push(entry)
         }
 
-        // pad with additional vecs until we have k pointers
+        // pad with additional vecs until we have k buckets
 
         result.extend((0..self.data_fragments - result.len()).map(|_| vec![0; size]));
 
@@ -307,13 +307,9 @@ impl ErasureCoder {
         // need to be able to store the data in k * size arrays.
         // size  > data_len // data_fragments
 
-        let mut size = self.data_fragments * MIN_SIZE;
+        let ratio = data_len / self.data_fragments;
 
-        while size < data_len {
-            size <<= 2;
-        }
-
-        size / self.data_fragments
+        MIN_SIZE * (ratio / MIN_SIZE + 1)
     }
 }
 
