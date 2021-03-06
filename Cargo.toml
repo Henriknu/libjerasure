@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 libc = "0.2"
 thiserror = "1.0"
+lazy_static = "1.4"
 
 
 

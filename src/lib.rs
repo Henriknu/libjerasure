@@ -1,10 +1,12 @@
 #![warn(rust_2018_idioms)]
 
+use lazy_static::lazy_static;
 use std::alloc::Layout;
 use std::alloc::{self};
 use std::num::NonZeroUsize;
 use std::ptr;
 use std::slice;
+use std::sync::Mutex;
 
 use error::{ErasureCoderError, ErasureCoderResult};
 
@@ -14,6 +16,10 @@ pub mod error;
 const DEFAULT_WORD_SIZE: usize = 8;
 const DEFAULT_PACKET_SIZE: usize = 1;
 const MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
+
+lazy_static! {
+    static ref LOCK: Mutex<()> = Mutex::new(());
+}
 
 pub struct ErasureCoder {
     /// k - The number of data blocks to encode. We need at least k such encoded blocks to decode.
@@ -38,6 +44,8 @@ impl ErasureCoder {
         data_fragments: NonZeroUsize,
         parity_fragments: NonZeroUsize,
     ) -> ErasureCoderResult<Self> {
+        let _guard = LOCK.lock().unwrap();
+
         let data_fragments = data_fragments.get();
         let parity_fragments = parity_fragments.get();
         let word_size = DEFAULT_WORD_SIZE;
