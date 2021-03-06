@@ -27,6 +27,9 @@ pub struct ErasureCoder {
     _schedule: *mut *mut i32,
 }
 
+unsafe impl Send for ErasureCoder {}
+unsafe impl Sync for ErasureCoder {}
+
 impl ErasureCoder {
     /// Creates new erasure coder, with `k = data_fragments` and `m = parity_fragments` .
     ///
