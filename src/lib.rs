@@ -231,10 +231,15 @@ impl ErasureCoder {
         coding.extend_from_slice(&fragments[(self.data_fragments - n_data_erased)..]);
 
         for i in n_data_erased..erasures.len() {
-            let id = erasures[i];
-            coding.insert(id as usize, unsafe {
-                Vec::from_raw_parts(alloc::alloc(layout), size, size)
-            });
+            let relative_id = erasures[i] - self.data_fragments as i32;
+
+            let coding_fragment = unsafe { Vec::from_raw_parts(alloc::alloc(layout), size, size) };
+
+            if relative_id >= coding.len() as i32 {
+                coding.push(coding_fragment);
+            } else {
+                coding.insert(relative_id as usize, coding_fragment);
+            }
         }
 
         assert_eq!(coding.len(), self.parity_fragments);
