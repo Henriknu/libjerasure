@@ -248,7 +248,7 @@ impl ErasureCoder {
 
         erasures.push(-1);
 
-        // Jerasure provides a smart (not naive) option for erasure decoding, providing performance gains.
+        // Jerasure provides a smart (not naive) option for erasure decoding, (hopefully) providing performance gains.
         // There exist a bug in which jerasure segfaults if smart is set and there are no erasures (data + coding is intact)
         // See: https://github.com/tsuraan/Jerasure/issues/16
         // Avoid this by simply using "dumb" option in the case that there were no erasures
@@ -345,10 +345,15 @@ impl ErasureCoder {
         coding.extend_from_slice(&fragments[(self.data_fragments - n_data_erased)..]);
 
         for i in n_data_erased..erasures.len() {
-            let id = erasures[i];
-            coding.insert(id as usize, unsafe {
-                Vec::from_raw_parts(alloc::alloc(layout), size, size)
-            });
+            let relative_id = erasures[i] - self.data_fragments as i32;
+
+            let coding_fragment = unsafe { Vec::from_raw_parts(alloc::alloc(layout), size, size) };
+
+            if relative_id >= coding.len() as i32 {
+                coding.push(coding_fragment);
+            } else {
+                coding.insert(relative_id as usize, coding_fragment);
+            }
         }
 
         assert_eq!(coding.len(), self.parity_fragments);
@@ -599,6 +604,88 @@ mod tests {
         // decode
 
         let reconstructed = encoder.reconstruct(&clone_encoded, vec![0, 1, 2]).unwrap();
+
+        assert_eq!(encoded.len(), reconstructed.len());
+
+        assert_eq!(encoded, reconstructed);
+    }
+
+    #[test]
+    fn encodes_reconstructs_with_no_codings() {
+        let f = 33;
+        let n = 3 * f + 1;
+
+        let k = NonZeroUsize::new(n - f).unwrap();
+        let m = NonZeroUsize::new(f).unwrap();
+
+        let encoder = ErasureCoder::new(k, m).unwrap();
+
+        let value = Value {
+            id: 100,
+            inner: vec![10000, 200000, 113231231, 2312312, 232332],
+        };
+
+        let data = serialize(&value).unwrap();
+
+        let encoded = encoder.encode(&data);
+
+        assert_eq!(encoded.len(), k.get() + m.get());
+
+        let mut clone_encoded = encoded.clone();
+
+        // erase multiple data elements
+
+        clone_encoded.drain(k.get()..);
+
+        // decode
+
+        let erasure_indexes = (k.get() as i32)..(encoded.len() as i32);
+
+        let erasures = erasure_indexes.collect::<Vec<i32>>();
+
+        let reconstructed = encoder.reconstruct(&clone_encoded, erasures).unwrap();
+
+        assert_eq!(encoded.len(), reconstructed.len());
+
+        assert_eq!(encoded, reconstructed);
+    }
+
+    #[test]
+    fn encodes_reconstructs_with_some_codings() {
+        let f = 33;
+        let n = 3 * f + 1;
+
+        let k = NonZeroUsize::new(n - f).unwrap();
+        let m = NonZeroUsize::new(f).unwrap();
+
+        let encoder = ErasureCoder::new(k, m).unwrap();
+
+        let value = Value {
+            id: 100,
+            inner: vec![10000, 200000, 113231231, 2312312, 232332],
+        };
+
+        let data = serialize(&value).unwrap();
+
+        let encoded = encoder.encode(&data);
+
+        assert_eq!(encoded.len(), k.get() + m.get());
+
+        let mut clone_encoded = encoded.clone();
+
+        // erase multiple data elements
+
+        clone_encoded.drain(k.get()..k.get() + 5);
+
+        // decode
+
+        let erasure_indexes = (k.get() as i32)..(k.get() as i32 + 5);
+
+        let erasures = erasure_indexes.collect::<Vec<i32>>();
+
+        println!("Erasures: {:#?}", erasures);
+
+        let reconstructed = encoder.reconstruct(&clone_encoded, erasures).unwrap();
 
         assert_eq!(encoded.len(), reconstructed.len());
 
