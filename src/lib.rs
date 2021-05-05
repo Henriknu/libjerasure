@@ -114,7 +114,7 @@ impl ErasureCoder {
     /// If needed, the data will be padded with zeros.
     ///
     /// Returns a Vec with `k + m` fragments, each of length `size`.
-    pub fn encode(&self, data: Vec<u8>) -> Vec<Vec<u8>> {
+    pub fn encode(&self, data: &[u8]) -> Vec<Vec<u8>> {
         // dynamicly choose size
 
         let size = self.determine_size(data.len());
@@ -430,7 +430,7 @@ impl ErasureCoder {
         Ok(result)
     }
 
-    fn spread(&self, data: Vec<u8>, size: usize) -> Vec<Vec<u8>> {
+    fn spread(&self, data: &[u8], size: usize) -> Vec<Vec<u8>> {
         let mut result: Vec<Vec<u8>> = data.chunks(size).map(|chunk| chunk.to_vec()).collect();
 
         let tail_len = result.last().unwrap().len();
@@ -499,7 +499,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(data);
+        let encoded = encoder.encode(&data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -524,7 +524,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let mut encoded = encoder.encode(data);
+        let mut encoded = encoder.encode(&data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -560,7 +560,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let mut encoded = encoder.encode(data);
+        let mut encoded = encoder.encode(&data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -598,7 +598,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(data);
+        let encoded = encoder.encode(&data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -636,7 +636,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(data);
+        let encoded = encoder.encode(&data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -676,7 +676,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(data);
+        let encoded = encoder.encode(&data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -716,7 +716,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let mut encoded = encoder.encode(data);
+        let mut encoded = encoder.encode(&data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
