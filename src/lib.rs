@@ -114,14 +114,18 @@ impl ErasureCoder {
     /// If needed, the data will be padded with zeros.
     ///
     /// Returns a Vec with `k + m` fragments, each of length `size`.
-    pub fn encode(&self, data: &[u8]) -> Vec<Vec<u8>> {
+    pub fn encode(&self, data: Vec<u8>) -> Vec<Vec<u8>> {
         // dynamicly choose size
 
         let size = self.determine_size(data.len());
 
         //spread data across k arrays of size *size*, padding with zeros if needed.
 
+        dbg!("Before spread");
+
         let data = self.spread(data, size);
+
+        dbg!("After spread");
 
         //data to pointers
 
@@ -153,6 +157,8 @@ impl ErasureCoder {
             );
         }
 
+        dbg!("After jerasure");
+
         // construct result (k + m) vector of blocks
 
         let mut result = Vec::with_capacity(self.fragments());
@@ -168,6 +174,12 @@ impl ErasureCoder {
                 slice::from_raw_parts(coding_ptrs[i], size)
             }));
         }
+
+        dbg!("After creating result");
+
+        dbg!(data_ptrs);
+
+        dbg!(coding_ptrs);
 
         result
     }
@@ -418,29 +430,21 @@ impl ErasureCoder {
         Ok(result)
     }
 
-    fn spread(&self, data: &[u8], size: usize) -> Vec<Vec<u8>> {
-        let mut result = Vec::new();
+    fn spread(&self, data: Vec<u8>, size: usize) -> Vec<Vec<u8>> {
+        let mut result: Vec<Vec<u8>> = data.chunks(size).map(|chunk| chunk.to_vec()).collect();
 
-        // include data
+        let tail_len = result.last().unwrap().len();
 
-        let mut copy = data.to_owned();
-
-        while !copy.is_empty() {
-            let entry = match copy.len() {
-                len if len >= size => copy.drain(0..size).collect(),
-                _ => {
-                    let mut remaining = copy.drain(..).collect::<Vec<u8>>();
-                    remaining.extend(vec![0; size - remaining.len()]);
-                    remaining
-                }
-            };
-
-            result.push(entry)
+        if tail_len < size {
+            result
+                .last_mut()
+                .unwrap()
+                .extend(std::iter::repeat(0).take(size - tail_len));
         }
 
-        // pad with additional vecs until we have k buckets
-
-        result.extend((0..self.data_fragments - result.len()).map(|_| vec![0; size]));
+        while result.len() < self.data_fragments {
+            result.push(vec![0; size])
+        }
 
         result
     }
@@ -495,7 +499,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(&data);
+        let encoded = encoder.encode(data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -520,7 +524,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let mut encoded = encoder.encode(&data);
+        let mut encoded = encoder.encode(data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -556,7 +560,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let mut encoded = encoder.encode(&data);
+        let mut encoded = encoder.encode(data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -594,7 +598,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(&data);
+        let encoded = encoder.encode(data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -632,7 +636,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(&data);
+        let encoded = encoder.encode(data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -672,7 +676,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let encoded = encoder.encode(&data);
+        let encoded = encoder.encode(data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
@@ -712,7 +716,7 @@ mod tests {
 
         let data = serialize(&value).unwrap();
 
-        let mut encoded = encoder.encode(&data);
+        let mut encoded = encoder.encode(data);
 
         assert_eq!(encoded.len(), k.get() + m.get());
 
