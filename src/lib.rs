@@ -119,13 +119,7 @@ impl ErasureCoder {
 
         let size = self.determine_size(data.len());
 
-        //spread data across k arrays of size *size*, padding with zeros if needed.
-
-        dbg!("Before spread");
-
         let data = self.spread(data, size);
-
-        dbg!("After spread");
 
         //data to pointers
 
@@ -157,8 +151,6 @@ impl ErasureCoder {
             );
         }
 
-        dbg!("After jerasure");
-
         // construct result (k + m) vector of blocks
 
         let mut result = Vec::with_capacity(self.fragments());
@@ -174,12 +166,6 @@ impl ErasureCoder {
                 slice::from_raw_parts(coding_ptrs[i], size)
             }));
         }
-
-        dbg!("After creating result");
-
-        dbg!(data_ptrs);
-
-        dbg!(coding_ptrs);
 
         result
     }
