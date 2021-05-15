@@ -13,8 +13,8 @@ use error::{ErasureCoderError, ErasureCoderResult};
 mod c_api;
 pub mod error;
 
-pub const DEFAULT_WORD_SIZE: usize = 8;
-pub const DEFAULT_PACKET_SIZE: usize = 20000;
+pub const DEFAULT_WORD_SIZE: usize = 4;
+pub const DEFAULT_PACKET_SIZE: usize = 2048;
 pub const MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
 
 lazy_static! {
@@ -43,13 +43,14 @@ impl ErasureCoder {
     pub fn new(
         data_fragments: NonZeroUsize,
         parity_fragments: NonZeroUsize,
+        packet_size: NonZeroUsize,
+        word_size: NonZeroUsize,
     ) -> ErasureCoderResult<Self> {
         let _guard = LOCK.lock().unwrap();
 
         let data_fragments = data_fragments.get();
         let parity_fragments = parity_fragments.get();
-        let word_size = DEFAULT_WORD_SIZE;
-        let packet_size = DEFAULT_PACKET_SIZE;
+        let word_size = word_size.get();
 
         let (bitmatix, schedule) = unsafe {
             let matrix = c_api::cauchy_good_general_coding_matrix(
@@ -97,7 +98,7 @@ impl ErasureCoder {
             data_fragments,
             parity_fragments,
             word_size,
-            packet_size,
+            packet_size: packet_size.get(),
 
             _bitmatrix: bitmatix,
             _schedule: schedule,
@@ -460,8 +461,6 @@ impl Drop for ErasureCoder {
 #[cfg(test)]
 mod tests {
 
-    use std::sync::Arc;
-
     use super::*;
 
     use bincode::{deserialize, serialize};
@@ -478,7 +477,13 @@ mod tests {
         let k = NonZeroUsize::new(4).unwrap();
         let m = NonZeroUsize::new(2).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
 
         let value = Value {
             id: 100,
@@ -506,8 +511,13 @@ mod tests {
         let k = NonZeroUsize::new(n - 2 * f).unwrap();
         let m = NonZeroUsize::new(2 * f).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
-
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
         let value = vec![vec![32u128; 16]; 100];
 
         let data = serialize(&value).unwrap();
@@ -528,8 +538,13 @@ mod tests {
         let k = NonZeroUsize::new(4).unwrap();
         let m = NonZeroUsize::new(2).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
-
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
         let value = Value {
             id: 100,
             inner: vec![10000, 200000, 113231231, 2312312, 232332],
@@ -564,8 +579,13 @@ mod tests {
         let k = NonZeroUsize::new(n - f).unwrap();
         let m = NonZeroUsize::new(f).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
-
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
         let value = Value {
             id: 100,
             inner: vec![10000, 200000, 113231231, 2312312, 232332],
@@ -602,8 +622,13 @@ mod tests {
         let k = NonZeroUsize::new(n - f).unwrap();
         let m = NonZeroUsize::new(f).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
-
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
         let value = Value {
             id: 100,
             inner: vec![10000, 200000, 113231231, 2312312, 232332],
@@ -640,8 +665,13 @@ mod tests {
         let k = NonZeroUsize::new(n - f).unwrap();
         let m = NonZeroUsize::new(f).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
-
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
         let value = Value {
             id: 100,
             inner: vec![10000, 200000, 113231231, 2312312, 232332],
@@ -680,7 +710,13 @@ mod tests {
         let k = NonZeroUsize::new(n - f).unwrap();
         let m = NonZeroUsize::new(f).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
 
         let value = Value {
             id: 100,
@@ -720,8 +756,13 @@ mod tests {
         let k = NonZeroUsize::new(4).unwrap();
         let m = NonZeroUsize::new(2).unwrap();
 
-        let encoder = ErasureCoder::new(k, m).unwrap();
-
+        let encoder = ErasureCoder::new(
+            k,
+            m,
+            NonZeroUsize::new(DEFAULT_PACKET_SIZE).unwrap(),
+            NonZeroUsize::new(DEFAULT_WORD_SIZE).unwrap(),
+        )
+        .unwrap();
         let value = Value {
             id: 100,
             inner: vec![10000, 200000, 113231231, 2312312, 232332],
