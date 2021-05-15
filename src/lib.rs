@@ -13,7 +13,7 @@ use error::{ErasureCoderError, ErasureCoderResult};
 mod c_api;
 pub mod error;
 
-pub const DEFAULT_WORD_SIZE: usize = 4;
+pub const DEFAULT_WORD_SIZE: usize = 8;
 pub const DEFAULT_PACKET_SIZE: usize = 2048;
 pub const DEFAULT_MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
 
