@@ -13,9 +13,9 @@ use error::{ErasureCoderError, ErasureCoderResult};
 mod c_api;
 pub mod error;
 
-const DEFAULT_WORD_SIZE: usize = 8;
-const DEFAULT_PACKET_SIZE: usize = 2000;
-const MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
+pub const DEFAULT_WORD_SIZE: usize = 8;
+pub const DEFAULT_PACKET_SIZE: usize = 2000;
+pub const MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
 
 lazy_static! {
     static ref LOCK: Mutex<()> = Mutex::new(());
