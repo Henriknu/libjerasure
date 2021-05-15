@@ -14,7 +14,7 @@ mod c_api;
 pub mod error;
 
 pub const DEFAULT_WORD_SIZE: usize = 8;
-pub const DEFAULT_PACKET_SIZE: usize = 2000;
+pub const DEFAULT_PACKET_SIZE: usize = 20000;
 pub const MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
 
 lazy_static! {
