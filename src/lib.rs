@@ -15,7 +15,7 @@ pub mod error;
 
 pub const DEFAULT_WORD_SIZE: usize = 4;
 pub const DEFAULT_PACKET_SIZE: usize = 2048;
-pub const MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
+pub const DEFAULT_MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
 
 lazy_static! {
     static ref LOCK: Mutex<()> = Mutex::new(());
@@ -445,7 +445,9 @@ impl ErasureCoder {
 
         let ratio = data_len / self.data_fragments;
 
-        MIN_SIZE * (ratio / MIN_SIZE + 1)
+        let min_size = self.packet_size * self.word_size;
+
+        min_size * (ratio / min_size + 1)
     }
 }
 
