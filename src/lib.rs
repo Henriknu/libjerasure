@@ -14,7 +14,7 @@ mod c_api;
 pub mod error;
 
 const DEFAULT_WORD_SIZE: usize = 8;
-const DEFAULT_PACKET_SIZE: usize = 1;
+const DEFAULT_PACKET_SIZE: usize = 2000;
 const MIN_SIZE: usize = DEFAULT_WORD_SIZE * DEFAULT_PACKET_SIZE;
 
 lazy_static! {
@@ -474,6 +474,8 @@ impl Drop for ErasureCoder {
 #[cfg(test)]
 mod tests {
 
+    use std::sync::Arc;
+
     use super::*;
 
     use bincode::{deserialize, serialize};
@@ -496,6 +498,31 @@ mod tests {
             id: 100,
             inner: vec![10000, 200000, 113231231, 2312312, 232332],
         };
+
+        let data = serialize(&value).unwrap();
+
+        let encoded = encoder.encode(&data);
+
+        assert_eq!(encoded.len(), k.get() + m.get());
+
+        let decoded = encoder.decode(&encoded, vec![]).unwrap();
+
+        let decoded_value: Value = deserialize(&decoded).unwrap();
+
+        println!("Decoded value: {:?}", decoded_value);
+    }
+
+    #[test]
+    fn large_n() {
+        let f = 25;
+        let n = 4 * f;
+
+        let k = NonZeroUsize::new(n - 2 * f).unwrap();
+        let m = NonZeroUsize::new(2 * f).unwrap();
+
+        let encoder = ErasureCoder::new(k, m).unwrap();
+
+        let value = vec![vec![32u128; 16]; 100];
 
         let data = serialize(&value).unwrap();
 
